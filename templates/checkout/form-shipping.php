@@ -2,70 +2,69 @@
 /**
  * Checkout shipping information form
  *
- * @author 		WooThemes
- * @package 	WooCommerce/Templates
- * @version     1.6.4
+ * This template can be overridden by copying it to yourtheme/woocommerce/checkout/form-shipping.php.
+ *
+ * HOWEVER, on occasion WooCommerce will need to update template files and you
+ * (the theme developer) will need to copy the new files to your theme to
+ * maintain compatibility. We try to do this as little as possible, but it does
+ * happen. When this occurs the version of the template file will be bumped and
+ * the readme will list any important changes.
+ *
+ * @see     https://docs.woocommerce.com/document/template-structure/
+ * @package WooCommerce\Templates
+ * @version 3.6.0
+ * @global WC_Checkout $checkout
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-
-global $woocommerce;
+defined( 'ABSPATH' ) || exit;
 ?>
+<div class="woocommerce-shipping-fields">
+	<?php if ( true === WC()->cart->needs_shipping_address() ) : ?>
 
-<?php if ( ( $woocommerce->cart->needs_shipping() || get_option('woocommerce_require_shipping_address') == 'yes' ) && ! $woocommerce->cart->ship_to_billing_address_only() ) : ?>
+		<h3 id="ship-to-different-address">
+			<label class="woocommerce-form__label woocommerce-form__label-for-checkbox checkbox">
+				<input id="ship-to-different-address-checkbox" class="woocommerce-form__input woocommerce-form__input-checkbox input-checkbox" <?php checked( apply_filters( 'woocommerce_ship_to_different_address_checked', 'shipping' === get_option( 'woocommerce_ship_to_destination' ) ? 1 : 0 ), 1 ); ?> type="checkbox" name="ship_to_different_address" value="1" /> <span><?php esc_html_e( 'Ship to a different address?', 'woocommerce' ); ?></span>
+			</label>
+		</h3>
 
-	<?php
-		if ( empty( $_POST ) ) :
+		<div class="shipping_address">
 
-			$shiptobilling = (get_option('woocommerce_ship_to_same_address')=='yes') ? 1 : 0;
-			$shiptobilling = apply_filters('woocommerce_shiptobilling_default', $shiptobilling);
+			<?php do_action( 'woocommerce_before_checkout_shipping_form', $checkout ); ?>
 
-		else :
+			<div class="woocommerce-shipping-fields__field-wrapper">
+				<?php
+				$fields = $checkout->get_checkout_fields( 'shipping' );
 
-			$shiptobilling = $checkout->get_value('shiptobilling');
+				foreach ( $fields as $key => $field ) {
+					woocommerce_form_field( $key, $field, $checkout->get_value( $key ) );
+				}
+				?>
+			</div>
 
-		endif;
-	?>
+			<?php do_action( 'woocommerce_after_checkout_shipping_form', $checkout ); ?>
 
-	<p class="form-row" id="shiptobilling">
-		<input id="shiptobilling-checkbox" class="input-checkbox" <?php checked($shiptobilling, 1); ?> type="checkbox" name="shiptobilling" value="1" />
-		<label for="shiptobilling-checkbox" class="checkbox"><?php _e( 'Ship to billing address?', 'woocommerce' ); ?></label>
-	</p>
+		</div>
 
-	<h3><?php _e( 'Shipping Address', 'woocommerce' ); ?></h3>
+	<?php endif; ?>
+</div>
+<div class="woocommerce-additional-fields">
+	<?php do_action( 'woocommerce_before_order_notes', $checkout ); ?>
 
-	<div class="shipping_address">
+	<?php if ( apply_filters( 'woocommerce_enable_order_notes_field', 'yes' === get_option( 'woocommerce_enable_order_comments', 'yes' ) ) ) : ?>
 
-		<?php do_action('woocommerce_before_checkout_shipping_form', $checkout); ?>
+		<?php if ( ! WC()->cart->needs_shipping() || wc_ship_to_billing_address_only() ) : ?>
 
-		<?php foreach ($checkout->checkout_fields['shipping'] as $key => $field) : ?>
+			<h3><?php esc_html_e( 'Additional information', 'woocommerce' ); ?></h3>
 
-			<?php woocommerce_form_field( $key, $field, $checkout->get_value( $key ) ); ?>
+		<?php endif; ?>
 
-		<?php endforeach; ?>
-
-		<?php do_action('woocommerce_after_checkout_shipping_form', $checkout); ?>
-
-	</div>
-
-<?php endif; ?>
-
-<?php do_action('woocommerce_before_order_notes', $checkout); ?>
-
-<?php if (get_option('woocommerce_enable_order_comments')!='no') : ?>
-
-	<?php if ($woocommerce->cart->ship_to_billing_address_only()) : ?>
-
-		<h3><?php _e( 'Additional Information', 'woocommerce' ); ?></h3>
+		<div class="woocommerce-additional-fields__field-wrapper">
+			<?php foreach ( $checkout->get_checkout_fields( 'order' ) as $key => $field ) : ?>
+				<?php woocommerce_form_field( $key, $field, $checkout->get_value( $key ) ); ?>
+			<?php endforeach; ?>
+		</div>
 
 	<?php endif; ?>
 
-	<?php foreach ($checkout->checkout_fields['order'] as $key => $field) : ?>
-
-		<?php woocommerce_form_field( $key, $field, $checkout->get_value( $key ) ); ?>
-
-	<?php endforeach; ?>
-
-<?php endif; ?>
-
-<?php do_action('woocommerce_after_order_notes', $checkout); ?>
+	<?php do_action( 'woocommerce_after_order_notes', $checkout ); ?>
+</div>

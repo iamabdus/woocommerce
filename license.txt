@@ -1,6 +1,6 @@
-WooCommerce
+WooCommerce - eCommerce for WordPress
 
-Copyright 2011 by the contributors
+Copyright 2015 by the contributors
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,22 +23,12 @@ permission notices:
   http://jigowatt.com - http://jigoshop.com
 
   Jigoshop is released under the GPL
-  
-  Jigoshop Commercial Edition
-
-	NOTICE OF LICENSE
-	This source file is subject to the Jigoshop Commercial Edition License that is available at: http://jigoshop.com/license/commercial-edition If you did not receive a copy of the license and are unable to obtain it through the world-wide-web, please send an email to info@jigoshop.com so we can send you a copy immediately.
-
-	DISCLAIMER
-	Do not edit or add directly to this file if you wish to upgrade Jigoshop to newer versions in the future. If you wish to customise Jigoshop core for your needs, please use our GitHub repository to publish essential changes for consideration.
-
-	@package Jigoshop
-	@copyright Copyright © 2011 Jigowatt Ltd. (http://jigowatt.co.uk)
-	@license	 http://jigoshop.com/license/commercial-edition
 
 and
 
-  WooThemes
+  WooCommerce - eCommerce for WordPress
+
+  WooCommerce is Copyright (c) 2015 WooThemes
 
   WooCommerce is released under the GPL
 
@@ -47,7 +37,7 @@ and
   GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
- Copyright © 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ Copyright © 2007 Free Software Foundation, Inc. <https://fsf.org/>
  Everyone is permitted to copy and distribute verbatim copies
  of this license document, but changing it is not allowed.
 
@@ -691,7 +681,7 @@ the "copyright" line and a pointer to where the full notice is found.
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Also add information on how to contact you by electronic and paper mail.
 
@@ -710,11 +700,11 @@ might be different; for a GUI interface, you would use an "about box".
   You should also get your employer (if you work as a programmer) or school,
 if any, to sign a "copyright disclaimer" for the program, if necessary.
 For more information on this, and how to apply and follow the GNU GPL, see
-<http://www.gnu.org/licenses/>.
+<https://www.gnu.org/licenses/>.
 
   The GNU General Public License does not permit incorporating your program
 into proprietary programs.  If your program is a subroutine library, you
 may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
-<http://www.gnu.org/philosophy/why-not-lgpl.html>.
+<https://www.gnu.org/philosophy/why-not-lgpl.html>.

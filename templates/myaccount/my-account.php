@@ -2,33 +2,35 @@
 /**
  * My Account page
  *
- * @author 		WooThemes
- * @package 	WooCommerce/Templates
- * @version     2.0.0
+ * This template can be overridden by copying it to yourtheme/woocommerce/myaccount/my-account.php.
+ *
+ * HOWEVER, on occasion WooCommerce will need to update template files and you
+ * (the theme developer) will need to copy the new files to your theme to
+ * maintain compatibility. We try to do this as little as possible, but it does
+ * happen. When this occurs the version of the template file will be bumped and
+ * the readme will list any important changes.
+ *
+ * @see     https://docs.woocommerce.com/document/template-structure/
+ * @package WooCommerce\Templates
+ * @version 3.5.0
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+defined( 'ABSPATH' ) || exit;
 
-global $woocommerce;
+/**
+ * My Account navigation.
+ *
+ * @since 2.6.0
+ */
+do_action( 'woocommerce_account_navigation' ); ?>
 
-$woocommerce->show_messages(); ?>
-
-<p class="myaccount_user">
+<div class="woocommerce-MyAccount-content">
 	<?php
-	printf(
-		__( 'Hello, <strong>%s</strong>. From your account dashboard you can view your recent orders, manage your shipping and billing addresses and <a href="%s">change your password</a>.', 'woocommerce' ),
-		$current_user->display_name,
-		get_permalink( woocommerce_get_page_id( 'change_password' ) )
-	);
+		/**
+		 * My Account content.
+		 *
+		 * @since 2.6.0
+		 */
+		do_action( 'woocommerce_account_content' );
 	?>
-</p>
-
-<?php do_action( 'woocommerce_before_my_account' ); ?>
-
-<?php woocommerce_get_template( 'myaccount/my-downloads.php' ); ?>
-
-<?php woocommerce_get_template( 'myaccount/my-orders.php', array( 'order_count' => $order_count ) ); ?>
-
-<?php woocommerce_get_template( 'myaccount/my-address.php' ); ?>
-
-<?php do_action( 'woocommerce_after_my_account' ); ?>
+</div>

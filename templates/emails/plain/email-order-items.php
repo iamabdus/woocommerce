@@ -2,42 +2,62 @@
 /**
  * Email Order Items (plain)
  *
- * @author 		WooThemes
- * @package 	WooCommerce/Templates/Emails/Plain
- * @version     2.0.0
+ * This template can be overridden by copying it to yourtheme/woocommerce/emails/plain/email-order-items.php.
+ *
+ * HOWEVER, on occasion WooCommerce will need to update template files and you
+ * (the theme developer) will need to copy the new files to your theme to
+ * maintain compatibility. We try to do this as little as possible, but it does
+ * happen. When this occurs the version of the template file will be bumped and
+ * the readme will list any important changes.
+ *
+ * @see         https://docs.woocommerce.com/document/template-structure/
+ * @package     WooCommerce\Templates\Emails\Plain
+ * @version     3.7.0
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly
+}
 
-global $woocommerce;
+foreach ( $items as $item_id => $item ) :
+	if ( apply_filters( 'woocommerce_order_item_visible', true, $item ) ) {
+		$product       = $item->get_product();
+		$sku           = '';
+		$purchase_note = '';
 
-foreach ( $items as $item ) :
+		if ( is_object( $product ) ) {
+			$sku           = $product->get_sku();
+			$purchase_note = $product->get_purchase_note();
+		}
 
-	// Get/prep product data
-	$_product 	= $order->get_product_from_item( $item );
-	$item_meta 	= new WC_Order_Item_Meta( $item['item_meta'] );
+		echo apply_filters( 'woocommerce_order_item_name', $item->get_name(), $item, false );
+		if ( $show_sku && $sku ) {
+			echo ' (#' . $sku . ')';
+		}
+		echo ' X ' . apply_filters( 'woocommerce_email_order_item_quantity', $item->get_quantity(), $item );
+		echo ' = ' . $order->get_formatted_line_subtotal( $item ) . "\n";
 
-	// Title, sku, qty, price
-	echo apply_filters( 'woocommerce_order_product_title', $item['name'], $_product );
-	echo $show_sku && $_product->get_sku() ? ' (#' . $_product->get_sku() . ')' : '';
+		// allow other plugins to add additional product information here
+		do_action( 'woocommerce_order_item_meta_start', $item_id, $item, $order, $plain_text );
+		echo strip_tags(
+			wc_display_item_meta(
+				$item,
+				array(
+					'before'    => "\n- ",
+					'separator' => "\n- ",
+					'after'     => '',
+					'echo'      => false,
+					'autop'     => false,
+				)
+			)
+		);
 
-	// Variation
-	echo $item_meta->meta ? "\n" . nl2br( $item_meta->display( true, true ) ) : '';
-
-	// Quantity
-	echo "\n" . sprintf( __( 'Quantity: %s', 'woocommerce' ), $item['qty'] );
-
-	// Cost
-	echo "\n" . sprintf( __( 'Cost: %s', 'woocommerce' ), $order->get_formatted_line_subtotal( $item ) );
-
-	// Download URLs
-	if ( $show_download_links && $_product->exists() && $_product->is_downloadable() )
-		echo "\n" . implode( "\n", $order->get_downloadable_file_urls( $item['product_id'], $item['variation_id'], $item ) );
-
+		// allow other plugins to add additional product information here
+		do_action( 'woocommerce_order_item_meta_end', $item_id, $item, $order, $plain_text );
+	}
 	// Note
-	if ( $show_purchase_note && $purchase_note = get_post_meta( $_product->id, '_purchase_note', true ) )
-		echo "\n" . nl2br( $purchase_note );
-
+	if ( $show_purchase_note && $purchase_note ) {
+		echo "\n" . do_shortcode( wp_kses_post( $purchase_note ) );
+	}
 	echo "\n\n";
-
 endforeach;

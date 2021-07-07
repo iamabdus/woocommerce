@@ -2,70 +2,32 @@
 /**
  * Product attributes
  *
- * Used by list_attributes() in the products class
+ * Used by list_attributes() in the products class.
  *
- * @author 		WooThemes
- * @package 	WooCommerce/Templates
- * @version     2.0.8
+ * This template can be overridden by copying it to yourtheme/woocommerce/single-product/product-attributes.php.
+ *
+ * HOWEVER, on occasion WooCommerce will need to update template files and you
+ * (the theme developer) will need to copy the new files to your theme to
+ * maintain compatibility. We try to do this as little as possible, but it does
+ * happen. When this occurs the version of the template file will be bumped and
+ * the readme will list any important changes.
+ *
+ * @see https://docs.woocommerce.com/document/template-structure/
+ * @package WooCommerce\Templates
+ * @version 3.6.0
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+defined( 'ABSPATH' ) || exit;
 
-global $woocommerce;
-
-$alt = 1;
-$attributes = $product->get_attributes();
-
-if ( empty( $attributes ) && ( ! $product->enable_dimensions_display() || ( ! $product->has_dimensions() && ! $product->has_weight() ) ) ) return;
+if ( ! $product_attributes ) {
+	return;
+}
 ?>
-<table class="shop_attributes">
-
-	<?php if ( $product->enable_dimensions_display() ) : ?>
-
-		<?php if ( $product->has_weight() ) : ?>
-
-			<tr class="<?php if ( ( $alt = $alt * -1 ) == 1 ) echo 'alt'; ?>">
-				<th><?php _e( 'Weight', 'woocommerce' ) ?></th>
-				<td class="product_weight"><?php echo $product->get_weight() . ' ' . esc_attr( get_option('woocommerce_weight_unit') ); ?></td>
-			</tr>
-
-		<?php endif; ?>
-
-		<?php if ( $product->has_dimensions() ) : ?>
-
-			<tr class="<?php if ( ( $alt = $alt * -1 ) == 1 ) echo 'alt'; ?>">
-				<th><?php _e( 'Dimensions', 'woocommerce' ) ?></th>
-				<td class="product_dimensions"><?php echo $product->get_dimensions(); ?></td>
-			</tr>
-
-		<?php endif; ?>
-
-	<?php endif; ?>
-
-	<?php foreach ( $attributes as $attribute ) :
-
-		if ( empty( $attribute['is_visible'] ) || ( $attribute['is_taxonomy'] && ! taxonomy_exists( $attribute['name'] ) ) )
-			continue;
-		?>
-
-		<tr class="<?php if ( ( $alt = $alt * -1 ) == 1 ) echo 'alt'; ?>">
-			<th><?php echo $woocommerce->attribute_label( $attribute['name'] ); ?></th>
-			<td><?php
-				if ( $attribute['is_taxonomy'] ) {
-
-					$values = woocommerce_get_product_terms( $product->id, $attribute['name'], 'names' );
-					echo apply_filters( 'woocommerce_attribute', wpautop( wptexturize( implode( ', ', $values ) ) ), $attribute, $values );
-
-				} else {
-
-					// Convert pipes to commas and display values
-					$values = array_map( 'trim', explode( '|', $attribute['value'] ) );
-					echo apply_filters( 'woocommerce_attribute', wpautop( wptexturize( implode( ', ', $values ) ) ), $attribute, $values );
-
-				}
-			?></td>
+<table class="woocommerce-product-attributes shop_attributes">
+	<?php foreach ( $product_attributes as $product_attribute_key => $product_attribute ) : ?>
+		<tr class="woocommerce-product-attributes-item woocommerce-product-attributes-item--<?php echo esc_attr( $product_attribute_key ); ?>">
+			<th class="woocommerce-product-attributes-item__label"><?php echo wp_kses_post( $product_attribute['label'] ); ?></th>
+			<td class="woocommerce-product-attributes-item__value"><?php echo wp_kses_post( $product_attribute['value'] ); ?></td>
 		</tr>
-
 	<?php endforeach; ?>
-
 </table>

@@ -1,129 +1,98 @@
-jQuery(document).ready(function($) {
-
-	// Placeholder
-	$('.woocommerce textarea[placeholder], .woocommerce-page textarea[placeholder], .woocommerce input[placeholder], .woocommerce-page input[placeholder]').simplePlaceholder();
-
+/* global Cookies */
+jQuery( function( $ ) {
 	// Orderby
-	$(document).on( 'change', 'select.orderby', function() {
-		$(this).closest('form').submit();
+	$( '.woocommerce-ordering' ).on( 'change', 'select.orderby', function() {
+		$( this ).closest( 'form' ).trigger( 'submit' );
 	});
-
-	// Quantity buttons
-	$("div.quantity:not(.buttons_added), td.quantity:not(.buttons_added)").addClass('buttons_added').append('<input type="button" value="+" class="plus" />').prepend('<input type="button" value="-" class="minus" />');
 
 	// Target quantity inputs on product pages
-	$("input.qty:not(.product-quantity input.qty)").each(function(){
+	$( 'input.qty:not(.product-quantity input.qty)' ).each( function() {
+		var min = parseFloat( $( this ).attr( 'min' ) );
 
-		var min = parseFloat( $(this).attr('min') );
-
-		if ( min && min > 0 && parseFloat( $(this).val() ) < min ) {
-			$(this).val( min );
+		if ( min >= 0 && parseFloat( $( this ).val() ) < min ) {
+			$( this ).val( min );
 		}
-
 	});
 
-	$(document).on( 'click', '.plus, .minus', function() {
+	var noticeID   = $( '.woocommerce-store-notice' ).data( 'notice-id' ) || '',
+		cookieName = 'store_notice' + noticeID;
 
-		// Get values
-		var $qty 		= $(this).closest('.quantity').find(".qty");
-	    var currentVal 	= parseFloat( $qty.val() );
-	    var max 		= parseFloat( $qty.attr('max') );
-	    var min 		= parseFloat( $qty.attr('min') );
-	    var step 		= $qty.attr('step');
+	// Check the value of that cookie and show/hide the notice accordingly
+	if ( 'hidden' === Cookies.get( cookieName ) ) {
+		$( '.woocommerce-store-notice' ).hide();
+	} else {
+		$( '.woocommerce-store-notice' ).show();
+	}
 
-	    // Format values
-	    if ( ! currentVal || currentVal == "" || currentVal == "NaN" ) currentVal = 0;
-	    if ( max == "" || max == "NaN" ) max = '';
-	    if ( min == "" || min == "NaN" ) min = 0;
-	    if ( step == 'any' || step == "" || step == undefined || parseFloat( step ) == "NaN" ) step = 1;
-
-	    // Change the value
-	    if ( $(this).is('.plus') ) {
-
-		    if ( max && ( max == currentVal || currentVal > max ) ) {
-		    	$qty.val( max );
-		    } else {
-		    	$qty.val( currentVal + parseFloat( step ) );
-		    }
-
-	    } else {
-
-		    if ( min && ( min==currentVal || currentVal < min ) ) {
-		    	$qty.val( min );
-		    } else if ( currentVal > 0 ) {
-		    	$qty.val( currentVal - parseFloat( step ) );
-		    }
-
-	    }
-
-	    // Trigger change event
-	    $qty.trigger('change');
+	// Set a cookie and hide the store notice when the dismiss button is clicked
+	$( '.woocommerce-store-notice__dismiss-link' ).on( 'click', function( event ) {
+		Cookies.set( cookieName, 'hidden', { path: '/' } );
+		$( '.woocommerce-store-notice' ).hide();
+		event.preventDefault();
 	});
 
-	/* State/Country select boxes */
-	var states_json = woocommerce_params.countries.replace(/&quot;/g, '"');
-	var states = $.parseJSON( states_json );
+	// Make form field descriptions toggle on focus.
+	if ( $( '.woocommerce-input-wrapper span.description' ).length ) {
+		$( document.body ).on( 'click', function() {
+			$( '.woocommerce-input-wrapper span.description:visible' ).prop( 'aria-hidden', true ).slideUp( 250 );
+		} );
+	}
 
-	$('select.country_to_state').change(function(){
+	$( '.woocommerce-input-wrapper' ).on( 'click', function( event ) {
+		event.stopPropagation();
+	} );
 
-		var country = $(this).val();
+	$( '.woocommerce-input-wrapper :input' )
+		.on( 'keydown', function( event ) {
+			var input       = $( this ),
+				parent      = input.parent(),
+				description = parent.find( 'span.description' );
 
-		var $statebox = $(this).closest('div').find('#billing_state, #shipping_state, #calc_shipping_state');
-		var $parent = $statebox.parent();
+			if ( 27 === event.which && description.length && description.is( ':visible' ) ) {
+				description.prop( 'aria-hidden', true ).slideUp( 250 );
+				event.preventDefault();
+				return false;
+			}
+		} )
+		.on( 'click focus', function() {
+			var input       = $( this ),
+				parent      = input.parent(),
+				description = parent.find( 'span.description' );
 
-		var input_name = $statebox.attr('name');
-		var input_id = $statebox.attr('id');
-		var value = $statebox.val();
-		var placeholder = $statebox.attr('placeholder');
+			parent.addClass( 'currentTarget' );
 
-		if (states[country]) {
-			if (states[country].length == 0) {
+			$( '.woocommerce-input-wrapper:not(.currentTarget) span.description:visible' ).prop( 'aria-hidden', true ).slideUp( 250 );
 
-				$statebox.parent().hide().find('.chzn-container').remove();
-				$statebox.replaceWith('<input type="hidden" class="hidden" name="' + input_name + '" id="' + input_id + '" value="" placeholder="' + placeholder + '" />');
+			if ( description.length && description.is( ':hidden' ) ) {
+				description.prop( 'aria-hidden', false ).slideDown( 250 );
+			}
 
-				$('body').trigger('country_to_state_changed', [country, $(this).closest('div')]);
+			parent.removeClass( 'currentTarget' );
+		} );
 
+	// Common scroll to element code.
+	$.scroll_to_notices = function( scrollElement ) {
+		if ( scrollElement.length ) {
+			$( 'html, body' ).animate( {
+				scrollTop: ( scrollElement.offset().top - 100 )
+			}, 1000 );
+		}
+	};
+
+	// Show password visiblity hover icon on woocommerce forms
+	$( '.woocommerce form .woocommerce-Input[type="password"]' ).wrap( '<span class="password-input"></span>' );
+	// Add 'password-input' class to the password wrapper in checkout page.
+	$( '.woocommerce form input' ).filter(':password').parent('span').addClass('password-input');
+	$( '.password-input' ).append( '<span class="show-password-input"></span>' );
+
+	$( '.show-password-input' ).on( 'click',
+		function() {
+			$( this ).toggleClass( 'display-password' );
+			if ( $( this ).hasClass( 'display-password' ) ) {
+				$( this ).siblings( ['input[type="password"]'] ).prop( 'type', 'text' );
 			} else {
-
-				var options = '';
-				var state = states[country];
-				for(var index in state) {
-					options = options + '<option value="' + index + '">' + state[index] + '</option>';
-				}
-				$statebox.parent().show();
-				if ($statebox.is('input')) {
-					// Change for select
-					$statebox.replaceWith('<select name="' + input_name + '" id="' + input_id + '" class="state_select" placeholder="' + placeholder + '"></select>');
-					$statebox = $(this).closest('div').find('#billing_state, #shipping_state, #calc_shipping_state');
-				}
-				$statebox.html( '<option value="">' + woocommerce_params.i18n_select_state_text + '</option>' + options);
-
-				$statebox.val(value);
-
-				$('body').trigger('country_to_state_changed', [country, $(this).closest('div')]);
-
-			}
-		} else {
-			if ($statebox.is('select')) {
-
-				$parent.show().find('.chzn-container').remove();
-				$statebox.replaceWith('<input type="text" class="input-text" name="' + input_name + '" id="' + input_id + '" placeholder="' + placeholder + '" />');
-
-				$('body').trigger('country_to_state_changed', [country, $(this).closest('div')]);
-
-			} else if ($statebox.is('.hidden')) {
-
-				$parent.show().find('.chzn-container').remove();
-				$statebox.replaceWith('<input type="text" class="input-text" name="' + input_name + '" id="' + input_id + '" placeholder="' + placeholder + '" />');
-
-				$('body').trigger('country_to_state_changed', [country, $(this).closest('div')]);
-
+				$( this ).siblings( 'input[type="text"]' ).prop( 'type', 'password' );
 			}
 		}
-
-		$('body').trigger('country_to_state_changing', [country, $(this).closest('div')]);
-
-	});
-
+	);
 });

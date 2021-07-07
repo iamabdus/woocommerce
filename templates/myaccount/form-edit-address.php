@@ -2,49 +2,55 @@
 /**
  * Edit address form
  *
- * @author 		WooThemes
- * @package 	WooCommerce/Templates
- * @version     1.6.4
+ * This template can be overridden by copying it to yourtheme/woocommerce/myaccount/form-edit-address.php.
+ *
+ * HOWEVER, on occasion WooCommerce will need to update template files and you
+ * (the theme developer) will need to copy the new files to your theme to
+ * maintain compatibility. We try to do this as little as possible, but it does
+ * happen. When this occurs the version of the template file will be bumped and
+ * the readme will list any important changes.
+ *
+ * @see https://docs.woocommerce.com/document/template-structure/
+ * @package WooCommerce\Templates
+ * @version 3.6.0
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+defined( 'ABSPATH' ) || exit;
 
-global $woocommerce, $current_user;
+$page_title = ( 'billing' === $load_address ) ? esc_html__( 'Billing address', 'woocommerce' ) : esc_html__( 'Shipping address', 'woocommerce' );
 
-get_currentuserinfo();
-?>
+do_action( 'woocommerce_before_edit_account_address_form' ); ?>
 
-<?php $woocommerce->show_messages(); ?>
-
-<?php if (!$load_address) : ?>
-
-	<?php woocommerce_get_template('myaccount/my-address.php'); ?>
-
+<?php if ( ! $load_address ) : ?>
+	<?php wc_get_template( 'myaccount/my-address.php' ); ?>
 <?php else : ?>
 
-	<form action="<?php echo esc_url( add_query_arg( 'address', $load_address, get_permalink( woocommerce_get_page_id('edit_address') ) ) ); ?>" method="post">
+	<form method="post">
 
-		<h3><?php if ($load_address=='billing') _e( 'Billing Address', 'woocommerce' ); else _e( 'Shipping Address', 'woocommerce' ); ?></h3>
+		<h3><?php echo apply_filters( 'woocommerce_my_account_edit_address_title', $page_title, $load_address ); ?></h3><?php // @codingStandardsIgnoreLine ?>
 
-		<?php
-		foreach ($address as $key => $field) :
-			$value = (isset($_POST[$key])) ? $_POST[$key] : get_user_meta( get_current_user_id(), $key, true );
+		<div class="woocommerce-address-fields">
+			<?php do_action( "woocommerce_before_edit_address_form_{$load_address}" ); ?>
 
-			// Default values
-			if (!$value && ($key=='billing_email' || $key=='shipping_email')) $value = $current_user->user_email;
-			if (!$value && ($key=='billing_country' || $key=='shipping_country')) $value = $woocommerce->countries->get_base_country();
-			if (!$value && ($key=='billing_state' || $key=='shipping_state')) $value = $woocommerce->countries->get_base_state();
+			<div class="woocommerce-address-fields__field-wrapper">
+				<?php
+				foreach ( $address as $key => $field ) {
+					woocommerce_form_field( $key, $field, wc_get_post_data_by_key( $key, $field['value'] ) );
+				}
+				?>
+			</div>
 
-			woocommerce_form_field( $key, $field, $value );
-		endforeach;
-		?>
+			<?php do_action( "woocommerce_after_edit_address_form_{$load_address}" ); ?>
 
-		<p>
-			<input type="submit" class="button" name="save_address" value="<?php _e( 'Save Address', 'woocommerce' ); ?>" />
-			<?php $woocommerce->nonce_field('edit_address') ?>
-			<input type="hidden" name="action" value="edit_address" />
-		</p>
+			<p>
+				<button type="submit" class="button" name="save_address" value="<?php esc_attr_e( 'Save address', 'woocommerce' ); ?>"><?php esc_html_e( 'Save address', 'woocommerce' ); ?></button>
+				<?php wp_nonce_field( 'woocommerce-edit_address', 'woocommerce-edit-address-nonce' ); ?>
+				<input type="hidden" name="action" value="edit_address" />
+			</p>
+		</div>
 
 	</form>
 
 <?php endif; ?>
+
+<?php do_action( 'woocommerce_after_edit_account_address_form' ); ?>

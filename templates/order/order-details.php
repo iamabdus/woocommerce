@@ -2,143 +2,113 @@
 /**
  * Order details
  *
- * @author 		WooThemes
- * @package 	WooCommerce/Templates
- * @version     2.0.3
+ * This template can be overridden by copying it to yourtheme/woocommerce/order/order-details.php.
+ *
+ * HOWEVER, on occasion WooCommerce will need to update template files and you
+ * (the theme developer) will need to copy the new files to your theme to
+ * maintain compatibility. We try to do this as little as possible, but it does
+ * happen. When this occurs the version of the template file will be bumped and
+ * the readme will list any important changes.
+ *
+ * @see     https://docs.woocommerce.com/document/template-structure/
+ * @package WooCommerce\Templates
+ * @version 4.6.0
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+defined( 'ABSPATH' ) || exit;
 
-global $woocommerce;
+$order = wc_get_order( $order_id ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 
-$order = new WC_Order( $order_id );
+if ( ! $order ) {
+	return;
+}
+
+$order_items           = $order->get_items( apply_filters( 'woocommerce_purchase_order_item_types', 'line_item' ) );
+$show_purchase_note    = $order->has_status( apply_filters( 'woocommerce_purchase_note_order_statuses', array( 'completed', 'processing' ) ) );
+$show_customer_details = is_user_logged_in() && $order->get_user_id() === get_current_user_id();
+$downloads             = $order->get_downloadable_items();
+$show_downloads        = $order->has_downloadable_item() && $order->is_download_permitted();
+
+if ( $show_downloads ) {
+	wc_get_template(
+		'order/order-downloads.php',
+		array(
+			'downloads'  => $downloads,
+			'show_title' => true,
+		)
+	);
+}
 ?>
-<h2><?php _e( 'Order Details', 'woocommerce' ); ?></h2>
-<table class="shop_table order_details">
-	<thead>
-		<tr>
-			<th class="product-name"><?php _e( 'Product', 'woocommerce' ); ?></th>
-			<th class="product-total"><?php _e( 'Total', 'woocommerce' ); ?></th>
-		</tr>
-	</thead>
-	<tfoot>
-	<?php
-		if ( $totals = $order->get_order_item_totals() ) foreach ( $totals as $total ) :
-			?>
+<section class="woocommerce-order-details">
+	<?php do_action( 'woocommerce_order_details_before_order_table', $order ); ?>
+
+	<h2 class="woocommerce-order-details__title"><?php esc_html_e( 'Order details', 'woocommerce' ); ?></h2>
+
+	<table class="woocommerce-table woocommerce-table--order-details shop_table order_details">
+
+		<thead>
 			<tr>
-				<th scope="row"><?php echo $total['label']; ?></th>
-				<td><?php echo $total['value']; ?></td>
+				<th class="woocommerce-table__product-name product-name"><?php esc_html_e( 'Product', 'woocommerce' ); ?></th>
+				<th class="woocommerce-table__product-table product-total"><?php esc_html_e( 'Total', 'woocommerce' ); ?></th>
 			</tr>
+		</thead>
+
+		<tbody>
 			<?php
-		endforeach;
-	?>
-	</tfoot>
-	<tbody>
-		<?php
-		if (sizeof($order->get_items())>0) {
+			do_action( 'woocommerce_order_details_before_order_table_items', $order );
 
-			foreach($order->get_items() as $item) {
+			foreach ( $order_items as $item_id => $item ) {
+				$product = $item->get_product();
 
-				$_product = get_product( $item['variation_id'] ? $item['variation_id'] : $item['product_id'] );
-
-				echo '
-					<tr class = "' . esc_attr( apply_filters( 'woocommerce_order_table_item_class', 'order_table_item', $item, $order ) ) . '">
-						<td class="product-name">' .
-							apply_filters( 'woocommerce_order_table_product_title', '<a href="' . get_permalink( $item['product_id'] ) . '">' . $item['name'] . '</a>', $item ) . ' ' .
-							apply_filters( 'woocommerce_order_table_item_quantity', '<strong class="product-quantity">&times; ' . $item['qty'] . '</strong>', $item );
-
-				$item_meta = new WC_Order_Item_Meta( $item['item_meta'] );
-				$item_meta->display();
-
-				if ( $_product && $_product->exists() && $_product->is_downloadable() && $order->is_download_permitted() ) {
-
-					$download_file_urls = $order->get_downloadable_file_urls( $item['product_id'], $item['variation_id'], $item );
-
-					$i     = 0;
-					$links = array();
-
-					foreach ( $download_file_urls as $file_url => $download_file_url ) {
-
-						$filename = woocommerce_get_filename_from_url( $file_url );
-
-						$links[] = '<small><a href="' . $download_file_url . '">' . sprintf( __( 'Download file%s', 'woocommerce' ), ( count( $download_file_urls ) > 1 ? ' ' . ( $i + 1 ) . ': ' : ': ' ) ) . $filename . '</a></small>';
-
-						$i++;
-					}
-
-					echo implode( '<br/>', $links );
-				}
-
-				echo '</td><td class="product-total">' . $order->get_formatted_line_subtotal( $item ) . '</td></tr>';
-
-				// Show any purchase notes
-				if ($order->status=='completed' || $order->status=='processing') {
-					if ($purchase_note = get_post_meta( $_product->id, '_purchase_note', true))
-						echo '<tr class="product-purchase-note"><td colspan="3">' . apply_filters('the_content', $purchase_note) . '</td></tr>';
-				}
-
+				wc_get_template(
+					'order/order-details-item.php',
+					array(
+						'order'              => $order,
+						'item_id'            => $item_id,
+						'item'               => $item,
+						'show_purchase_note' => $show_purchase_note,
+						'purchase_note'      => $product ? $product->get_purchase_note() : '',
+						'product'            => $product,
+					)
+				);
 			}
-		}
 
-		do_action( 'woocommerce_order_items_table', $order );
-		?>
-	</tbody>
-</table>
+			do_action( 'woocommerce_order_details_after_order_table_items', $order );
+			?>
+		</tbody>
 
-<?php if ( get_option('woocommerce_allow_customers_to_reorder') == 'yes' && $order->status=='completed' ) : ?>
-	<p class="order-again">
-		<a href="<?php echo esc_url( $woocommerce->nonce_url( 'order_again', add_query_arg( 'order_again', $order->id, add_query_arg( 'order', $order->id, get_permalink( woocommerce_get_page_id( 'view_order' ) ) ) ) ) ); ?>" class="button"><?php _e( 'Order Again', 'woocommerce' ); ?></a>
-	</p>
-<?php endif; ?>
+		<tfoot>
+			<?php
+			foreach ( $order->get_order_item_totals() as $key => $total ) {
+				?>
+					<tr>
+						<th scope="row"><?php echo esc_html( $total['label'] ); ?></th>
+						<td><?php echo ( 'payment_method' === $key ) ? esc_html( $total['value'] ) : wp_kses_post( $total['value'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
+					</tr>
+					<?php
+			}
+			?>
+			<?php if ( $order->get_customer_note() ) : ?>
+				<tr>
+					<th><?php esc_html_e( 'Note:', 'woocommerce' ); ?></th>
+					<td><?php echo wp_kses_post( nl2br( wptexturize( $order->get_customer_note() ) ) ); ?></td>
+				</tr>
+			<?php endif; ?>
+		</tfoot>
+	</table>
 
-<?php do_action( 'woocommerce_order_details_after_order_table', $order ); ?>
+	<?php do_action( 'woocommerce_order_details_after_order_table', $order ); ?>
+</section>
 
-<header>
-	<h2><?php _e( 'Customer details', 'woocommerce' ); ?></h2>
-</header>
-<dl class="customer_details">
 <?php
-	if ($order->billing_email) echo '<dt>'.__( 'Email:', 'woocommerce' ).'</dt><dd>'.$order->billing_email.'</dd>';
-	if ($order->billing_phone) echo '<dt>'.__( 'Telephone:', 'woocommerce' ).'</dt><dd>'.$order->billing_phone.'</dd>';
-?>
-</dl>
+/**
+ * Action hook fired after the order details.
+ *
+ * @since 4.4.0
+ * @param WC_Order $order Order data.
+ */
+do_action( 'woocommerce_after_order_details', $order );
 
-<?php if (get_option('woocommerce_ship_to_billing_address_only')=='no') : ?>
-
-<div class="col2-set addresses">
-
-	<div class="col-1">
-
-<?php endif; ?>
-
-		<header class="title">
-			<h3><?php _e( 'Billing Address', 'woocommerce' ); ?></h3>
-		</header>
-		<address><p>
-			<?php
-				if (!$order->get_formatted_billing_address()) _e( 'N/A', 'woocommerce' ); else echo $order->get_formatted_billing_address();
-			?>
-		</p></address>
-
-<?php if (get_option('woocommerce_ship_to_billing_address_only')=='no') : ?>
-
-	</div><!-- /.col-1 -->
-
-	<div class="col-2">
-
-		<header class="title">
-			<h3><?php _e( 'Shipping Address', 'woocommerce' ); ?></h3>
-		</header>
-		<address><p>
-			<?php
-				if (!$order->get_formatted_shipping_address()) _e( 'N/A', 'woocommerce' ); else echo $order->get_formatted_shipping_address();
-			?>
-		</p></address>
-
-	</div><!-- /.col-2 -->
-
-</div><!-- /.col2-set -->
-
-<?php endif; ?>
-
-<div class="clear"></div>
+if ( $show_customer_details ) {
+	wc_get_template( 'order/order-details-customer.php', array( 'order' => $order ) );
+}
